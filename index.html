@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcam Viewer</title>
+    <style>
+        body {
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #333;
+        }
+        canvas {
+            max-width: 100%;
+            max-height: 100vh;
+            background-color: black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="webcamCanvas"></canvas>
+
+    <script>
+        const canvas = document.getElementById('webcamCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size to match video stream
+        function setCanvasSize(video) {
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+        }
+
+        // Draw video frame to canvas
+        function drawVideoFrame(video) {
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            requestAnimationFrame(() => drawVideoFrame(video));
+        }
+
+        // Start webcam stream
+        async function startWebcam() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+                const video = document.createElement('video');
+                video.srcObject = stream;
+                video.play();
+                
+                video.onloadedmetadata = () => {
+                    setCanvasSize(video);
+                    drawVideoFrame(video);
+                };
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+                alert('Could not access webcam. Please ensure you have granted permission.');
+            }
+        }
+
+        // Start when page loads
+        window.addEventListener('load', startWebcam);
+    </script>
+</body>
+</html>
