@@ -23,5 +23,3 @@ This project uses:
 ## Vibe Check
 This project was 100% vibe-coded using [aider](https://aider.chat), the AI-powered coding assistant. No overthinking, just pure creative flow. The code might not be perfect, but it's got ✨vibes✨.
 
-## License
-MIT License - do whatever you want with it, just keep the vibes positive!
