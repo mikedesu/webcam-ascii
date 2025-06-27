@@ -26,17 +26,59 @@
     <script>
         const canvas = document.getElementById('webcamCanvas');
         const ctx = canvas.getContext('2d');
+        const asciiChars = " .:-=+*#%@";
+        const fontSize = 8;
+        let scaledWidth, scaledHeight;
 
-        // Set canvas size to match video stream
+        // Set canvas size based on video dimensions
         function setCanvasSize(video) {
-            canvas.width = video.videoWidth;
-            canvas.height = video.videoHeight;
+            // Scale down dimensions for ASCII effect
+            scaledWidth = Math.floor(video.videoWidth / fontSize);
+            scaledHeight = Math.floor(video.videoHeight / fontSize);
+            canvas.width = scaledWidth * fontSize;
+            canvas.height = scaledHeight * fontSize;
         }
 
-        // Draw video frame to canvas
-        function drawVideoFrame(video) {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-            requestAnimationFrame(() => drawVideoFrame(video));
+        // Convert pixel brightness to ASCII character
+        function getAsciiChar(brightness) {
+            const index = Math.floor(brightness * (asciiChars.length - 1) / 255);
+            return asciiChars[index];
+        }
+
+        // Draw ASCII version of video frame
+        function drawAsciiFrame(video) {
+            // Create temporary canvas to sample pixels
+            const tempCanvas = document.createElement('canvas');
+            const tempCtx = tempCanvas.getContext('2d');
+            tempCanvas.width = video.videoWidth;
+            tempCanvas.height = video.videoHeight;
+            tempCtx.drawImage(video, 0, 0);
+            
+            // Clear main canvas
+            ctx.fillStyle = 'black';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Sample pixels and draw ASCII characters
+            ctx.font = `${fontSize}px monospace`;
+            ctx.textAlign = 'center';
+            
+            for (let y = 0; y < scaledHeight; y++) {
+                for (let x = 0; x < scaledWidth; x++) {
+                    const pixelX = Math.floor(x * fontSize * (video.videoWidth / canvas.width));
+                    const pixelY = Math.floor(y * fontSize * (video.videoHeight / canvas.height));
+                    const pixelData = tempCtx.getImageData(pixelX, pixelY, 1, 1).data;
+                    
+                    // Calculate brightness and get ASCII character
+                    const brightness = 0.34 * pixelData[0] + 0.5 * pixelData[1] + 0.16 * pixelData[2];
+                    const char = getAsciiChar(brightness);
+                    
+                    // Draw colored character
+                    ctx.fillStyle = `rgb(${pixelData[0]}, ${pixelData[1]}, ${pixelData[2]})`;
+                    ctx.fillText(char, x * fontSize + fontSize/2, y * fontSize + fontSize);
+                }
+            }
+            
+            requestAnimationFrame(() => drawAsciiFrame(video));
         }
 
         // Start webcam stream
@@ -49,7 +91,7 @@
                 
                 video.onloadedmetadata = () => {
                     setCanvasSize(video);
-                    drawVideoFrame(video);
+                    drawAsciiFrame(video);
                 };
             } catch (error) {
                 console.error('Error accessing webcam:', error);
